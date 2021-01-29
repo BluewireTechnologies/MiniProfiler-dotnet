@@ -145,11 +145,13 @@ namespace StackExchange.Profiling {
                 const resource = window.performance.timing;
                 const start = resource.fetchStart;
 
-                this.Performance = perfTimings
+                const sorted = perfTimings
                     .filter((current) => resource[current.name])
                     .map((current, i) => ({ item: current, index: i }))
-                    .sort((a, b) => resource[a.item.name] - resource[b.item.name] || a.index - b.index)
-                    .map((x, i, sorted) => {
+                    .sort((a, b) => resource[a.item.name] - resource[b.item.name] || a.index - b.index);
+
+                this.Performance = sorted
+                    .map((x, i) => {
                         const current = x.item;
                         const next = i + 1 < sorted.length ? sorted[i + 1].item : null;
 
@@ -354,7 +356,9 @@ namespace StackExchange.Profiling {
                     mp.container.insertAdjacentHTML('beforeend', profilerHtml);
 
                     // highight
-                    mp.container.querySelectorAll('pre code').forEach(block => mp.highlight(block as HTMLElement));
+                    for (const block of [].slice.call(mp.container.querySelectorAll('pre code'))) {
+                        mp.highlight(block as HTMLElement);
+                    }
 
                     mp.bindDocumentEvents(RenderMode.Full);
                 } else {
@@ -413,7 +417,7 @@ namespace StackExchange.Profiling {
                     .then(data => data.json())
                     .then((data: IProfiler[]) => {
                         let html = '';
-                        data.forEach((profiler) => {
+                        for (const profiler of data) {
                             html += (`
 <tr>
   <td><a href="${options.path}results?id=${profiler.Id}">${mp.htmlEscape(profiler.Name)}</a></td>
@@ -425,7 +429,7 @@ namespace StackExchange.Profiling {
   <td>${getTiming(profiler, 'domComplete').Start}</td> ` : `
   <td colspan="3" class="mp-results-none">(no client timings)</td>`) + `
 </tr>`);
-                        });
+                        }
                         document.querySelector('.mp-results-index').insertAdjacentHTML('beforeend', html);
                         const oldId = id;
                         const oldData = data;
@@ -646,7 +650,7 @@ namespace StackExchange.Profiling {
             }
 
             let time = 0;
-            result.forEach((elem) => {
+            for (const elem of result) {
                 elem.PrevGap = {
                     duration: (elem.StartMilliseconds - time).toFixed(2),
                     start: time,
@@ -656,7 +660,7 @@ namespace StackExchange.Profiling {
                 elem.PrevGap.Reason = determineGap(elem.PrevGap, profiler.Root, null);
 
                 time = elem.StartMilliseconds + elem.DurationMilliseconds;
-            });
+            }
 
 
             if (result.length > 0) {
@@ -746,7 +750,9 @@ namespace StackExchange.Profiling {
   </tr>`;
                 // Append children
                 if (timing.Children) {
-                    timing.Children.forEach((ct) => str += renderTiming(ct));
+                    for (const ct of timing.Children) {
+                        str += renderTiming(ct);
+                    }
                 }
                 return str;
             };
@@ -816,11 +822,11 @@ namespace StackExchange.Profiling {
                 p.HasTrivialTimings = p.HasTrivialTimings || list.some((t) => t.isTrivial);
 
                 list.sort((a, b) => a.start - b.start);
-                list.forEach((l) => {
+                for (const l of list) {
                     const percent = (100 * l.start / end) + '%';
                     l.left = l.point ? `calc(${percent} - 2px)` : percent;
                     l.width = l.point ? '4px' : (100 * l.duration / end + '%');
-                });
+                }
 
                 return `
         <table class="mp-timings mp-client-timings">
@@ -971,7 +977,9 @@ namespace StackExchange.Profiling {
         private scrollToQuery = (link: HTMLElement, queries: HTMLElement) => {
             const id = link.closest('tr').dataset['timingId'];
             const rows = queries.querySelectorAll('tr[data-timing-id="' + id + '"]');
-            rows.forEach(n => n.classList.add('highlight'));
+            for (const n of [].slice.call(rows)) {
+                n.classList.add('highlight');
+            }
             if (rows && rows[0]) {
                 rows[0].scrollIntoView();
             }
@@ -1054,7 +1062,9 @@ namespace StackExchange.Profiling {
                         mp.scrollToQuery(queriesButton, queries);
 
                         // syntax highlighting
-                        queries.querySelectorAll('pre code').forEach(block => mp.highlight(block as HTMLElement));
+                        for (const block of [].slice.call(queries.querySelectorAll('pre code'))) {
+                            mp.highlight(block as HTMLElement);
+                        }
                         return;
                     }
                 });
@@ -1237,9 +1247,9 @@ namespace StackExchange.Profiling {
                 const clear = container.querySelector<HTMLSpanElement>('.mp-controls .mp-clear');
                 clear.addEventListener('click', function () {
                     const results = container.querySelectorAll('.mp-result');
-                    results.forEach(item => {
+                    for (const item of [].slice.call(results)) {
                         item.parentNode.removeChild(item);
-                    });
+                    }
                 });
             } else {
                 container.classList.add('mp-no-controls');
